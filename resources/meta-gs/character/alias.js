@@ -113,7 +113,7 @@ export const alias = {
   塔利雅: 'Dahlia,塔利亚,塔丽雅,主祭,助祭',
   伊涅芙: 'Ineffa,机器人,机娘',
   菈乌玛: 'Lauma',
-  菲林斯: 'Flins',
+  菲林斯: 'Flins,菲菲',
   爱诺: 'Aino',
-  奈芙尔: 'Nefer'
+  奈芙尔: 'Nefer',
 }
