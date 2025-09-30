@@ -1,0 +1,99 @@
+# 工作流名称
+name: 自动同步上游仓库
+
+on:
+  # 触发条件
+  # 1. 定时任务：每天凌晨2点 (UTC时间) 自动运行
+  schedule:
+    - cron: '0 2 * * *'
+
+  # 2. 手动触发：允许您在 Actions 页面手动点击运行
+  workflow_dispatch:
+
+# 任务
+jobs:
+  sync:
+    # 运行环境
+    runs-on: ubuntu-latest
+
+    # 步骤
+    steps:
+      # 第一步：检出（下载）你自己的仓库代码
+      - name: 第一步：检出 Fork 仓库代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 第二步：配置 Git 操作所需的用户名和邮箱
+      - name: 第二步：配置 Git 用户信息
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: 第三步：合并上游到 master
+        run: |
+          set -e
+          
+          # 确保 upstream 指向正确（兼容重复运行）
+          if git remote get-url upstream >/dev/null 2>&1; then
+            git remote set-url upstream https://github.com/yoimiya-kokomi/miao-plugin.git
+          else
+            git remote add upstream https://github.com/yoimiya-kokomi/miao-plugin.git
+          fi
+          
+          git fetch --prune --tags upstream
+          
+          # 切到 master（第一次跑时若本地没有 master，则从 origin/master 建）
+          if git show-ref --verify --quiet refs/heads/master; then
+            git checkout master
+          else
+            git checkout -b master origin/master
+          fi
+          
+          # 先把本地 master 快进到 origin/master，减少冲突面
+          git pull --ff-only origin master
+          
+          # 与上游合并；若有冲突会失败 -> 触发你的失败邮件通知
+          git merge --no-edit upstream/master
+          
+          echo "合并成功，正在推送到你的仓库..."
+          git push origin master
+          # 如需同步标签可加：
+          # git push origin --tags
+
+      # 第四步：发送邮件通知（仅在前一步失败时执行）
+      - name: 第四步：若失败则发送邮件通知
+        # 关键条件：仅在此任务(job)的前面步骤失败时，才执行此步骤
+        if: failure()
+        uses: dawidd6/action-send-mail@v4
+        with:
+          # -- QQ邮箱的SMTP服务器配置 --
+          server_address: smtp.qq.com
+          server_port: 465
+          secure: true
+
+          # -- 登录凭据（从Secrets中读取） --
+          # 从仓库的 Secrets 设置中读取邮箱地址
+          username: ${{ secrets.MAIL_USERNAME }}
+          # 从仓库的 Secrets 设置中读取授权码
+          password: ${{ secrets.MAIL_PASSWORD }}
+
+          # -- 邮件内容 --
+          # 主题
+          subject: '【失败提醒】Yunzai Fork 仓库自动同步失败'
+          # 收件人邮箱
+          to: 377178599@qq.com
+          # 发件人显示名称和地址
+          from: GitHub Actions 通知 <${{ secrets.MAIL_USERNAME }}>
+          # 邮件正文
+          body: |
+            你好，
+
+            你的仓库（${{ github.repository }}）在自动同步上游仓库时失败了。
+
+            失败原因很可能是 rebase 操作遇到了代码冲突，需要你手动解决。
+
+            你可以点击下面的链接查看失败的详细日志：
+
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
