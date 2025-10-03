@@ -26,6 +26,12 @@ export const cfgSchema = {
         def: false,
         miao: true
       },
+      roleCard: {
+        title: '#月谕圣牌',
+        key: '月谕圣牌收藏',
+        def: false,
+        miao: true
+      },
       hardChallenge: {
         title: '#幽境',
         key: '幽境危战',
