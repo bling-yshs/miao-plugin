@@ -81,7 +81,7 @@ jobs:
 
           # -- 邮件内容 --
           # 主题
-          subject: '【失败提醒】Yunzai Fork 仓库自动同步失败'
+          subject: '【失败提醒】Miao-Plugin Fork 仓库自动同步失败'
           # 收件人邮箱
           to: 377178599@qq.com
           # 发件人显示名称和地址
