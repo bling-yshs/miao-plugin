@@ -141,7 +141,7 @@ export default class ProfileRank {
     await Data.redisSet(`miao:rank:${groupId}:cfg`, cfg, 3600 * 24 * 365)
   }
 
-  static async setUidInfo ({ uid, qq, profiles, uidType = 'bind' }) {
+  static async setUidInfo ({ uid, qq, profiles, uidType = 'bind', forceUpdateQQ = false }) {
     if (!uid) {
       return false
     }
@@ -179,7 +179,7 @@ export default class ProfileRank {
     } else {
       data.uidType = data.uidType || 'bind'
       if (data.uidType === 'bind') {
-        data.qq = data.qq || qq || ''
+        data.qq = forceUpdateQQ ? (qq || data.qq || '') : (data.qq || qq || '')
       } else {
         data.qq = qq || data.qq || ''
       }

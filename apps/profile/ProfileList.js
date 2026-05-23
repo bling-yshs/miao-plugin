@@ -38,6 +38,7 @@ const ProfileList = {
       } else {
         e.newChar = ret
         e.isNewCharFromMys = fromMys
+        e.isProfileRefresh = true
         return await ProfileList.render(e)
       }
     }
@@ -113,7 +114,7 @@ const ProfileList = {
 
     // 检测标志位
     let qq = (e.at && !e.atBot) ? e.at : e.user_id
-    await ProfileRank.setUidInfo({ uid, profiles, qq, uidType: isSelfUid ? 'ck' : 'bind' })
+    await ProfileRank.setUidInfo({ uid, profiles, qq, uidType: isSelfUid ? 'ck' : 'bind', forceUpdateQQ: !!e.isProfileRefresh })
 
     let groupId = e.group_id
     if (groupId) {
