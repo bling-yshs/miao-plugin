@@ -182,28 +182,22 @@ export default class MysApi {
       return false
     }
     let mysInfo = this.mysInfo || {}
-    // 暂时先在plugin侧阻止错误，防止刷屏
-    e._original_reply = e._original_reply || e.reply
-    e._reqCount = e._reqCount || 0
-    e.reply = function (msg) {
-      if (!e._isReplyed) {
-        e._isReplyed = true
-        return e._original_reply(msg)
-      } else {
-        // console.log('请求错误')
-      }
-    }
-    e._reqCount++
     let ret
     try {
       ret = await mys.getData(api, data)
       if (mysInfo && mysInfo.checkCode) {
         ret = await mysInfo.checkCode(ret, api, this.mys, data)
       }
-    } finally {
-      e._reqCount--
-      if (e._reqCount === 0) {
-        e.reply = e._original_reply
+    } catch (err) {
+      if (err?.isMysCodeError) {
+        // 一事件只提示一次错误，与 miao 各 app 的 _isReplyed 约定保持一致
+        if (!e._isReplyed) {
+          e._isReplyed = true
+          e.reply(err.replyMsg, false, err.replyOption)
+        }
+        ret = err.res || false
+      } else {
+        throw err
       }
     }
     if (!ret) {
