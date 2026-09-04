@@ -1,6 +1,7 @@
 import { User } from './index.js'
 import { Version } from '#miao'
 import { Button } from '#miao.models'
+import { refreshDevice } from './MysDevice.js'
 
 const PATCHED_GET_COOKIE = Symbol.for('miao-plugin.mysInfo.getCookie')
 const MAX_COOKIE_SELECTIONS = 50
@@ -172,6 +173,12 @@ export default class MysApi {
     return this.mys
   }
 
+  /**
+   * 使用请求Cookie对应账号的绑定设备获取米游社数据。
+   * @param {string} api 接口名称
+   * @param {object} [data] 接口参数
+   * @returns {Promise<object|boolean>} 接口数据或失败状态
+   */
   async getData (api, data) {
     if (!this.mysInfo) {
       return false
@@ -180,6 +187,40 @@ export default class MysApi {
     let mys = await this.getMysApi(e, api, { log: false })
     if (!mys) {
       return false
+    }
+    const account = /(?:^|;\s*)(?:ltuid|ltuid_v2|account_id|account_id_v2)=([^;]+)/.exec(mys.cookie || '')?.[1]
+    if (account) {
+      const saved = await redis.get(`miao:device:${account}`)
+      let device
+      try {
+        device = JSON.parse(saved)
+      } catch {}
+      if (device?.android && (!device.device_fp || !(device.expiresAt > Date.now()))) {
+        try {
+          device = await refreshDevice(device)
+          if (await redis.get(`miao:device:${account}`) === saved) {
+            await redis.set(`miao:device:${account}`, JSON.stringify(device))
+          } else {
+            return false
+          }
+        } catch {
+          if (!e._isReplyed) {
+            e._isReplyed = true
+            await e.reply('绑定设备的指纹刷新失败，请稍后重试')
+          }
+          return false
+        }
+      }
+      if (device?.device_id && device?.device_fp) {
+        data = {
+          ...data,
+          headers: {
+            ...data?.headers,
+            'x-rpc-device_id': device.device_id,
+            'x-rpc-device_fp': device.device_fp
+          }
+        }
+      }
     }
     let mysInfo = this.mysInfo || {}
     let ret

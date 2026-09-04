@@ -3,6 +3,7 @@ import { profileArtisList } from './profile/ProfileArtis.js'
 import ProfileDetail from './profile/ProfileDetail.js'
 import ProfileStat from './profile/ProfileStat.js'
 import ProfileList from './profile/ProfileList.js'
+import ProfileDevice from './profile/ProfileDevice.js'
 import { uploadCharacterImg, delProfileImg, profileImgList } from './character/ImgUpload.js'
 import { enemyLv } from './profile/ProfileUtils.js'
 import { groupRank, resetRank, refreshRank, manageRank } from './profile/ProfileRank.js'
@@ -14,6 +15,24 @@ let app = App.init({
 })
 
 app.reg({
+  profileDevice: {
+    name: '米游社设备绑定',
+    fn: ProfileDevice.bind,
+    rule: /^#(星铁|原神)?(绑定设备|解绑设备)$/
+  },
+
+  profileDeviceHelp: {
+    name: '米游社设备绑定帮助',
+    fn: ProfileDevice.help,
+    rule: /^#(星铁|原神)?绑定设备帮助$/
+  },
+
+  profileDeviceInput: {
+    name: '接收米游社设备信息',
+    fn: ProfileDevice.input,
+    rule: /a^/
+  },
+
   profileList: {
     name: '面板角色列表',
     desc: '查看当前已获取面板数据的角色列表',
