@@ -1,5 +1,7 @@
 import { parseDevice, refreshDevice } from '../../models/MysDevice.js'
 
+const deviceGuide = '请下载安装设备信息工具：\nhttps://cnb.cool/bling-team/release/-/releases/download/device-info-app/copy_device_info.apk\n然后复制并发送设备信息。'
+
 const ProfileDevice = {
   /**
    * 为发送者当前游戏的米游社账号开始绑定或解除设备绑定。
@@ -24,7 +26,7 @@ const ProfileDevice = {
     e.profileDeviceAccount = String(mysUser.ltuid)
     e.profileDeviceGame = game
     this.setContext('profileDeviceInput')
-    await e.reply(`为米游社账号 ${mysUser.ltuid} 绑定设备，请发送安卓设备信息工具复制的JSON，或发送：\n{"device_id":"设备ID","device_fp":"设备指纹"}\n建议私聊发送，发送“取消”结束绑定。获取方法见 #绑定设备帮助`)
+    await e.reply(deviceGuide)
     return true
   },
 
@@ -55,7 +57,7 @@ const ProfileDevice = {
     } catch {}
     let device = parseDevice(info)
     if (!device) {
-      await e.reply('设备信息格式错误，请发送安卓工具复制的完整JSON（deviceName、deviceBoard、deviceModel、oaid、androidVersion、deviceFingerprint、deviceProduct），或包含 device_id 和 device_fp 的JSON。发送“取消”可结束绑定。')
+      await e.reply('设备信息格式错误，请重新复制并发送工具中的设备信息。')
       return true
     }
     if (device.android) {
@@ -75,12 +77,12 @@ const ProfileDevice = {
   },
 
   /**
-   * 说明设备参数的获取方式和绑定命令。
+   * 引导下载设备信息工具并发送设备信息。
    * @param {object} e 消息事件
    * @returns {Promise<boolean>} 是否已处理命令
    */
   async help (e) {
-    await e.reply('方法一（安卓手机）：使用 %绑定设备帮助 中的设备信息工具，复制手机设备JSON。发送 #绑定设备，再粘贴完整JSON，机器人会自动获取设备指纹，有效期七天，过期后请求时自动刷新。\n方法二：抓取本人米游社APP同一请求头中的 x-rpc-device_id 和 x-rpc-device_fp。发送 #绑定设备，再发送：\n{"device_id":"x-rpc-device_id的内容","device_fp":"x-rpc-device_fp的内容"}\n发送 #解绑设备 可解除绑定。星铁使用 #星铁绑定设备、#星铁解绑设备。多账号请先切换到需要绑定的账号。')
+    await e.reply(deviceGuide)
     return true
   }
 }
