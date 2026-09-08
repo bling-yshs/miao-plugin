@@ -1,6 +1,6 @@
 import { parseDevice, refreshDevice } from '../../models/MysDevice.js'
 
-const deviceGuide = '请下载安装设备信息工具：\nhttps://cnb.cool/bling-team/release/-/releases/download/device-info-app/copy_device_info.apk\n然后复制并发送设备信息。'
+const deviceGuide = '请下载安装设备信息工具：\nhttps://cnb.cool/bling-team/release/-/releases/download/device-info-app/copy_device_info.apk\n然后复制并发送设备信息。发送“取消”结束绑定。'
 
 const ProfileDevice = {
   /**
@@ -57,7 +57,7 @@ const ProfileDevice = {
     } catch {}
     let device = parseDevice(info)
     if (!device) {
-      await e.reply('设备信息格式错误，请重新复制并发送工具中的设备信息。')
+      await e.reply('设备信息格式错误，请重新复制并发送工具中的设备信息。发送“取消”结束绑定。')
       return true
     }
     if (device.android) {
