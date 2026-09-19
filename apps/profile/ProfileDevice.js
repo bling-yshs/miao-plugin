@@ -1,4 +1,4 @@
-import { parseDevice, refreshDevice } from '../../models/MysDevice.js'
+import { bindDevice, unbindDevice } from '../../../mhy-plugin/api.js'
 import common from '../../../../lib/common/common.js'
 
 const deviceGuide = '请下载安装设备信息工具：\nhttps://cnb.cool/bling-team/release/-/releases/download/device-info-app/copy_device_info.apk\n然后复制并发送设备信息。发送“取消”结束绑定。'
@@ -17,10 +17,10 @@ const ProfileDevice = {
       await e.reply('请先绑定当前游戏账号的米游社Cookie')
       return true
     }
-    const key = `miao:device:${mysUser.ltuid}`
+    const userId = String(e.mainUserId || e.originalUserId || e.user_id)
     if (/解绑设备/.test(e.msg)) {
       this.finish('profileDeviceInput')
-      await redis.del(key)
+      await unbindDevice(userId, String(mysUser.ltuid))
       await e.reply('解绑设备成功')
       return true
     }
@@ -56,22 +56,13 @@ const ProfileDevice = {
     try {
       info = JSON.parse(msg)
     } catch {}
-    let device = parseDevice(info)
-    if (!device) {
-      await e.reply('设备信息格式错误，请重新复制并发送工具中的设备信息。发送“取消”结束绑定。')
+    try {
+      await bindDevice(String(e.mainUserId || e.originalUserId || e.user_id), String(account), info)
+    } catch (error) {
+      await e.reply(error.message || '绑定设备失败，请重试')
       return true
     }
-    if (device.android) {
-      await e.reply('正在根据手机设备信息获取米游社设备指纹…')
-      try {
-        device = await refreshDevice(device)
-      } catch {
-        await e.reply('获取设备指纹失败，请稍后重新发送设备信息，或发送“取消”')
-        return true
-      }
-      if (this.getContext()?.profileDeviceInput !== context) return true
-    }
-    await redis.set(`miao:device:${account}`, JSON.stringify(device))
+    if (this.getContext()?.profileDeviceInput !== context) return true
     this.finish('profileDeviceInput')
     await e.reply(`绑定设备成功，请发送 ${context.profileDeviceGame === 'sr' ? '#星铁' : '#'}米游社更新面板${e.isGroup ? '\n请撤回设备信息' : ''}`)
     return true
