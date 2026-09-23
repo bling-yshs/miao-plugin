@@ -3,7 +3,6 @@ import moment from 'moment'
 import { Data } from '#miao'
 import { chestInfo } from '../../resources/meta-gs/info/index.js'
 import AvatarUtil from './AvatarUtil.js'
-import { convertMysBatchTalent } from './MysBatchTalent.js'
 
 const MysAvatar = {
   // 检查更新force值
@@ -184,6 +183,40 @@ const MysAvatar = {
   },
 
   /**
+   * 将原神批量角色详情中的技能等级转换为 A/E/Q 等级。
+   * @param {object} char 角色元数据
+   * @param {object} detail 批量接口返回的单个角色详情
+   * @returns {object|false} 含命座加成的天赋等级，数据不完整时返回 false
+   */
+  convertBatchTalent (char, detail) {
+    const skills = detail?.skills
+    const cons = detail?.base?.actived_constellation_num
+    if (!char || !Array.isArray(skills) || !Number.isInteger(cons) || cons < 0 || Number(detail.base.id) !== char.id) {
+      return false
+    }
+
+    const talent = {}
+    const talentId = char.meta?.talentId || {}
+    for (const skill of skills) {
+      const key = talentId[skill.skill_id]
+      if (['a', 'e', 'q'].includes(key)) {
+        talent[key] = skill.level
+      }
+    }
+
+    const activeSkills = skills.filter(skill => skill.skill_type === 1)
+    for (let index = 0; index < 3; index++) {
+      const key = ['a', 'e', 'q'][index]
+      talent[key] = talent[key] || activeSkills[index]?.level
+    }
+    if (!['a', 'e', 'q'].every(key => Number.isInteger(talent[key]) && talent[key] > 0)) {
+      return false
+    }
+
+    return talent
+  },
+
+  /**
    * 使用MysApi刷新指定角色的天赋信息
    * @param player
    * @param ids
@@ -233,7 +266,7 @@ const MysAvatar = {
           for (const id of batchIds) {
             const avatar = player.getAvatar(id)
             const detail = details.get(Number(id))
-            const talent = convertMysBatchTalent(avatar?.char, detail)
+            const talent = MysAvatar.convertBatchTalent(avatar?.char, detail)
             if (!talent) {
               fallbackIds.push(id)
               continue
