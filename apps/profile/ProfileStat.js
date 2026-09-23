@@ -643,8 +643,13 @@ const ProfileStat = {
     return mergedAvatars;
   },
 
-  // 渲染
-  // mode stat:练度统计 avatar:角色列表 talent:天赋统计
+  /**
+   * 渲染角色信息列表。
+   * @param {Object} e 消息事件
+   * @param {string} mode 列表模式
+   * @param {boolean} isRole 是否渲染幻想真境剧诗角色统计
+   * @returns {Promise<boolean|void>} 是否完成响应
+   */
   async render (e, mode = 'stat', isRole = false) {
     let game = /星铁/.test(e.msg) ? 'sr' : 'gs'
     e.isSr = game === 'sr'
@@ -677,6 +682,10 @@ const ProfileStat = {
       retType: 'array',
       sort: true
     })
+
+    if (!isRole && /^#(星铁|原神)?(面板|喵喵)?练度统计$/.test(e.msg.trim())) {
+      avatarRet = lodash.orderBy(avatarRet, ['id'], ['desc'])
+    }
 
     if (avatarRet.length === 0) {
       e._isReplyed || e.reply(`查询失败，暂未获得#${uid}角色数据，请绑定CK或 #更新面板`)

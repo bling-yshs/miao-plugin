@@ -3,6 +3,7 @@ import moment from 'moment'
 import { Data } from '#miao'
 import { chestInfo } from '../../resources/meta-gs/info/index.js'
 import AvatarUtil from './AvatarUtil.js'
+import { convertMysBatchTalent } from './MysBatchTalent.js'
 
 const MysAvatar = {
   // 检查更新force值
@@ -203,13 +204,53 @@ const MysAvatar = {
       if (needReqIds.length > 8) {
         e && e.reply('正在获取角色信息，请稍候...')
       }
-      // 并发5，请求天赋数据
-      await Data.asyncPool(5, needReqIds, async (id) => {
+      let fallbackIds = []
+      let pendingIds = []
+      for (const id of needReqIds) {
         let avatar = player.getAvatar(id)
         if (!avatar) {
-          return false
+          continue
         }
-        if (avatar.isMaxTalent || failCount > 5) {
+        if (avatar.isMaxTalent) {
+          avatar.setTalent(false, 'original', true)
+          continue
+        }
+        pendingIds.push(id)
+      }
+
+      if (player.game === 'gs') {
+        for (let index = 0; index < pendingIds.length; index += 40) {
+          const batchIds = pendingIds.slice(index, index + 40).map(Number)
+          let batchData
+          try {
+            batchData = await mys.getCharacterDetail(batchIds)
+          } catch {
+            batchData = false
+          }
+          const details = new Map(Array.isArray(batchData?.list)
+            ? batchData.list.map(detail => [Number(detail?.base?.id), detail])
+            : [])
+          for (const id of batchIds) {
+            const avatar = player.getAvatar(id)
+            const detail = details.get(Number(id))
+            const talent = convertMysBatchTalent(avatar?.char, detail)
+            if (!talent) {
+              fallbackIds.push(id)
+              continue
+            }
+            avatar.cons = detail.base.actived_constellation_num
+            avatar.setTalent(talent, 'level', true)
+            refreshCount++
+          }
+        }
+      } else {
+        fallbackIds = pendingIds
+      }
+
+      // 并发5，请求批量结果中缺失的原神天赋或星铁行迹
+      await Data.asyncPool(5, fallbackIds, async (id) => {
+        let avatar = player.getAvatar(id)
+        if (failCount > 5) {
           avatar.setTalent(false, 'original', true)
           return false
         }
@@ -225,6 +266,12 @@ const MysAvatar = {
     return refreshCount
   },
 
+  /**
+   * 使用单角色详情刷新天赋，供星铁和原神批量结果缺失时使用。
+   * @param {object} avatar 角色数据
+   * @param {object} mys 米游社请求对象
+   * @returns {Promise<boolean>} 是否成功刷新天赋
+   */
   async refreshAvatarTalent (avatar, mys) {
     if (mys && mys.isSelfCookie) {
       let char = avatar.char
