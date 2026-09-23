@@ -683,7 +683,7 @@ const ProfileStat = {
       sort: true
     })
 
-    if (!isRole && /^#(星铁|原神)?(面板|喵喵)?练度统计$/.test(e.msg.trim())) {
+    if (game === 'gs' && !isRole && /^#(原神)?(面板|喵喵)?练度统计$/.test(e.msg.trim())) {
       avatarRet = lodash.orderBy(avatarRet, ['id'], ['desc'])
     }
 
