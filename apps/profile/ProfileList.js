@@ -5,10 +5,10 @@ import { Button, ProfileRank, Player, Character } from '#miao.models'
 
 const ProfileList = {
   /**
-   * 实际的刷新面板逻辑
-   * @param e
-   * @param fromMys
-   * @returns {Promise<boolean|*>}
+   * 刷新角色面板，并根据数据源提示失败原因。
+   * @param {object} e 消息事件
+   * @param {boolean} fromMys 是否使用米游社数据源
+   * @returns {Promise<boolean|*>} 命令处理结果
    */
   async doRefresh (e, fromMys = false) {
     let uid = await getTargetUid(e)
@@ -19,10 +19,13 @@ const ProfileList = {
 
     // 数据更新
     let player = Player.create(e)
-    await player.refreshProfile(2, fromMys)    
+    await player.refreshProfile(2, fromMys)
 
     if (!player?._update?.length) {
-      e._isReplyed || e.reply(['获取角色面板数据失败，请确认角色已在游戏内橱窗展示，并开放了查看详情。设置完毕后请5分钟后再进行请求~', new Button(e).profileList(uid)])
+      const msg = fromMys
+        ? '米游社未返回可用的角色面板数据，请检查账号状态后重试'
+        : '获取角色面板数据失败，请确认角色已在游戏内橱窗展示，并开放了查看详情。设置完毕后请5分钟后再进行请求~'
+      e._isReplyed || e.reply([msg, new Button(e).profileList(uid)])
       e._isReplyed = true
     } else {
       let ret = {}
@@ -33,7 +36,10 @@ const ProfileList = {
         }
       })
       if (lodash.isEmpty(ret)) {
-        e._isReplyed || e.reply(['获取角色面板数据失败，未能请求到角色数据。请确认角色已在游戏内橱窗展示，并开放了查看详情。设置完毕后请5分钟后再进行请求~', new Button(e).profileList(uid)])
+        const msg = fromMys
+          ? '米游社返回的面板中暂无可识别的角色，请稍后重试'
+          : '获取角色面板数据失败，未能请求到角色数据。请确认角色已在游戏内橱窗展示，并开放了查看详情。设置完毕后请5分钟后再进行请求~'
+        e._isReplyed || e.reply([msg, new Button(e).profileList(uid)])
         e._isReplyed = true
       } else {
         e.newChar = ret
