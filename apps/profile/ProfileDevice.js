@@ -69,7 +69,7 @@ const ProfileDevice = {
   },
 
   /**
-   * 通过转发消息说明设备信息获取方式及绑定、解绑步骤。
+   * 通过转发消息说明安卓设备信息获取方式及绑定步骤。
    * @param {object} e 消息事件
    * @returns {Promise<boolean>} 是否已处理命令
    */
@@ -77,28 +77,14 @@ const ProfileDevice = {
     const prefix = e.isSr || /星铁/.test(e.msg) ? '#星铁' : '#'
     const msgs = [
       '[绑定设备]',
-      '方法一：',
-      '1. 使用抓包软件抓取米游社APP的请求',
-      '2. 在请求头内找到【x-rpc-device_id】和【x-rpc-device_fp】',
-      '3. 自行构造如下格式的信息：',
-      '    {"device_id": "x-rpc-device_id的内容", "device_fp": "x-rpc-device_fp的内容"}',
-      `4. 给机器人发送“${prefix}绑定设备”指令`,
-      '5. 机器人会提示发送设备信息',
-      '6. 粘贴自行构造的信息发送',
-      '7. 提示绑定成功',
-      '--------------------------------',
-      '方法二（仅适用于安卓设备）：',
+      '方法一（仅适用于安卓设备）：',
       '1. 使用常用米游社手机下载下面链接的APK文件，并安装',
       'https://cnb.cool/bling-team/release/-/releases/download/device-info-app/copy_device_info.apk',
       '2. 打开后点击按钮复制',
       `3. 给机器人发送“${prefix}绑定设备”指令`,
       '4. 机器人会提示发送设备信息',
       '5. 粘贴设备信息发送',
-      '6. 提示绑定成功',
-      '发送“取消”结束绑定。',
-      '--------------------------------',
-      '[解绑设备]',
-      `发送 ${prefix}解绑设备 即可`
+      '6. 提示绑定成功'
     ]
     await e.reply(await common.makeForwardMsg(e, [msgs.join('\n')], '绑定设备帮助'))
     return true
