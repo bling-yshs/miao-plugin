@@ -134,6 +134,12 @@ export default class MysApi {
     return e._mys
   }
 
+  /**
+   * 初始化查询用户，并与运行时共用缺少UID时的提示状态。
+   * @param {object} e 消息事件
+   * @param {string} auth 米游社接口鉴权类型
+   * @returns {Promise<User|false>} 查询用户，缺少UID或运行时时返回false
+   */
   static async initUser (e, auth = 'all') {
     let { runtime } = e
     if (!runtime) {
@@ -158,8 +164,11 @@ export default class MysApi {
     if (uid) {
       return new User({ id: e.user_id, uid })
     } else {
-      e.reply(['请先发送【#绑定+你的UID】来绑定查询目标\n星铁请使用【#星铁绑定+UID】', new Button(e).bindUid()])
+      const shouldReply = !e._replyNeedUid && e.noTips !== true
       e._replyNeedUid = true
+      if (shouldReply) {
+        await e.reply(['请先发送【#绑定+你的UID】来绑定查询目标\n星铁请使用【#星铁绑定+UID】', new Button(e).bindUid()])
+      }
       return false
     }
   }

@@ -46,6 +46,12 @@ export async function getTargetUid (e) {
   return uid
 }
 
+/**
+ * 获取角色面板，必要时刷新数据，并在仍缺少数据时提示用户。
+ * @param {object} e 消息事件
+ * @param {string|number} avatar 角色名或角色 ID
+ * @returns {Promise<import('../../models/Avatar.js').default|false>} 角色面板或查询失败标记
+ */
 export async function getProfileRefresh (e, avatar) {
   let char = Character.get(avatar)
   if (!char) {
@@ -61,21 +67,9 @@ export async function getProfileRefresh (e, avatar) {
   }
   if (!profile || !profile.hasData) {
     if (!e._isReplyed) {
-      e.reply([
-        `⚠️ 暂无 ${char.name} 数据，请：\n` +
-        `━━━━━━━━━━━━\n` +
-        `📋 方式一：角色展柜更新（展柜需开启"显示角色详情）\n` +
-        `#更新面板    (原神)\n` +
-        `*更新面板    (星铁)\n\n` +
-        `📋 方式二：全量更新\n` +
-        `#扫码登录 (已登录可忽略)\n` +
-        `#米游社更新面板   (原神)\n` +
-        `*米游社更新面板   (星铁)`,
-        new Button(e).profileList(player.uid),
-        new Button(e).profile(char, player.uid)
-      ]);
+      e.reply(`未查询到 ${char.name} 数据`)
     }
-    return false;
+    return false
   }
   return profile
 }
