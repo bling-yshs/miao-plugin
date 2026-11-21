@@ -64,7 +64,7 @@ const ProfileDevice = {
     }
     if (this.getContext()?.profileDeviceInput !== context) return true
     this.finish('profileDeviceInput')
-    await e.reply(`绑定设备成功，请发送 ${context.profileDeviceGame === 'sr' ? '#星铁' : '#'}米游社更新面板${e.isGroup ? '\n请撤回设备信息' : ''}`)
+    await e.reply(`绑定设备成功${e.isGroup ? '\n请撤回设备信息' : ''}`)
     return true
   },
 
