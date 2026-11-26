@@ -2,17 +2,17 @@ import { Cfg } from '#miao'
 import { MysApi } from '#miao.models'
 import { miaoPath } from '#miao.path'
 
-/** 获取角色卡片的原图 */
+/**
+ * 根据引用消息获取并发送角色卡片或面板的原图。
+ * @param {object} e 消息事件。
+ * @returns {Promise<boolean>} 原图记录存在或已回复权限提示时返回 true，查找失败时返回 false。
+ */
 export async function getOriginalPicture (e) {
   let source
   if (e.reply_id) {
     source = { message_id: e.reply_id }
   } else {
-    if (!e.hasReply && !e.source) {
-      return false
-    }
-    // 引用的消息不是自己的消息
-    if (e.source.user_id !== e.self_id) {
+    if (!e.source || e.source.user_id !== e.self_id) {
       return false
     }
     // 获取原消息
@@ -58,11 +58,7 @@ export async function getOriginalPicture (e) {
       }
       return true
     }
-    // 对at错图像的增加嘲讽...
-    e.reply(segment.image(`file://${miaoPath}/resources/common/face/what.jpg`))
-    return false
   }
-  e.reply('消息太过久远了，俺也忘了原图是啥了，下次早点来吧~')
   return false
 }
 
