@@ -644,7 +644,7 @@ const ProfileStat = {
   },
 
   /**
-   * 渲染角色信息列表。原神的练度统计按角色 ID 降序展示，兼容省略命令前缀。
+   * 渲染角色信息列表。原神的练度统计按角色星级降序展示，同星级按角色 ID 降序，兼容省略命令前缀。
    * @param {Object} e 消息事件
    * @param {string} mode 列表模式
    * @param {boolean} isRole 是否渲染幻想真境剧诗角色统计
@@ -684,7 +684,7 @@ const ProfileStat = {
     })
 
     if (game === 'gs' && !isRole && /^#*(原神)?(面板|喵喵)?练度统计$/.test(e.msg.trim())) {
-      avatarRet = lodash.orderBy(avatarRet, ['id'], ['desc'])
+      avatarRet = lodash.orderBy(avatarRet, ['star', 'id'], ['desc', 'desc'])
     }
 
     if (avatarRet.length === 0) {
